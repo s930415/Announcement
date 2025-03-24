@@ -10,7 +10,7 @@
 <div class="container">
     <h2 class="mt-4">新增公告</h2>
 
-<form th:action="@{/announcements/save}" th:object="${announcement}" method="post">
+<form th:action="@{/announcements/save}" th:object="${announcement}" method="post" enctype="multipart/form-data">
     <input type="hidden" th:field="*{id}" />
 
     <div class="mb-3">
@@ -38,9 +38,17 @@
         <textarea class="form-control" name="content" th:field="*{content}" required></textarea>
     </div>
 
+
     <div class="mb-3">
-        <label class="form-label">上傳附件</label>
-        <input type="file" class="form-control" name="file">
+        <label class="form-label">附件</label>
+
+        <!-- 如果有附件，顯示下載連結 -->
+        <div th:if="${announcement.filePath}">
+            <a th:href="@{'/uploads/' + ${announcement.filePath}}" class="btn btn-primary" download>📎 [[${announcement.filePath}]] </a>
+        </div>
+
+        <!-- 檔案上傳 -->
+        <input type="file" class="form-control mt-2" name="file">
     </div>
     <button type="submit" class="btn btn-success">更新公告</button>
     <a href="/announcements/list" class="btn btn-secondary">返回</a>
