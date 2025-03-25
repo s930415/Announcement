@@ -4,6 +4,9 @@ import com.ck.announcement.model.Announcement;
 import com.ck.announcement.service.AnnouncementService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -27,19 +30,17 @@ public class AnnouncementController {
     @Value("${file.upload-dir}")
     private String uploadDir;
 
-    // 顯示公告列表
     @GetMapping(value = "/list")
-    public String listAnnouncements(Model model) {
-        List<Announcement> announcements = service.getAll();
-        model.addAttribute("announcements", announcements);
-        return "announcement-list";  // Thymeleaf 會載入 templates/announcement-list.html
+    public String listAnnouncements(Model model,@RequestParam(defaultValue = "0") int page,@RequestParam (defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Announcement> announcementPage = service.getAnnouncements(pageable);
+        model.addAttribute("announcementPage", announcementPage);
+        return "announcement-list";
     }
 
     @GetMapping(value = "/add")
     public String addAnnouncements(Model model) {
-        List<Announcement> announcements = service.getAll();
-        model.addAttribute("announcements", announcements);
-        return "announcement-add";  // Thymeleaf 會載入 templates/announcement-list.html
+        return "announcement-add";
     }
 
     // 顯示公告列表
@@ -48,9 +49,9 @@ public class AnnouncementController {
         Optional<Announcement> announcement = service.getById(id);
         if (announcement.isPresent()) {
             model.addAttribute("announcement", announcement.get());
-            return "announcement-edit";  // Thymeleaf 會載入 templates/announcement-edit.html
+            return "announcement-edit";
         }
-        return "redirect:/announcements/list";  // 如果找不到公告，返回列表頁
+        return "redirect:/announcements/list";
     }
 
     @PostMapping("/save")
@@ -60,18 +61,10 @@ public class AnnouncementController {
                 // 設定上傳目錄
                 String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
                 Path filePath = Paths.get(uploadDir, fileName);  // ✅ 修正 Paths.get() 寫法
-
-                // **確保目錄存在**
                 Files.createDirectories(filePath.getParent());  // ✅ 防止 getParent() 為 null
-
-                // **儲存檔案**
                 file.transferTo(filePath.toFile());
-
-                // **設定檔案存取路徑**
                 announcement.setFilePath(fileName);
             }
-
-            // **儲存公告**
             service.save(announcement);
             redirectAttributes.addFlashAttribute("successMessage", "公告新增成功！");
         } catch (Exception e) {
@@ -79,13 +72,13 @@ public class AnnouncementController {
             redirectAttributes.addFlashAttribute("errorMessage", "檔案上傳失敗：" + e.getMessage());
         }
 
-        return "redirect:/announcements/list";  // 儲存後重新導向到公告列表
+        return "redirect:/announcements/list";
     }
 
     @PostMapping("/delete/{id}")
     public String saveAnnouncement(@PathVariable Integer id, RedirectAttributes redirectAttributes) {
         redirectAttributes.addFlashAttribute("successMessage", "公告刪除成功！");
         service.deleteById(id);
-        return "redirect:/announcements/list";  // 儲存後重新導向到公告列表
+        return "redirect:/announcements/list";
     }
 }

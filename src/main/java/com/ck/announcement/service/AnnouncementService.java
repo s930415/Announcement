@@ -5,6 +5,8 @@ import com.ck.announcement.model.Announcement;
 import com.ck.announcement.repository.AnnouncementRepository;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
@@ -33,5 +35,9 @@ public class AnnouncementService {
             return true;
         }
         return false;
+    }
+
+    public Page<Announcement> getAnnouncements(Pageable pageable) {
+        return repository.findAll(pageable);
     }
 }
